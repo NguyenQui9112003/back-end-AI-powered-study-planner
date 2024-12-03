@@ -7,6 +7,8 @@ import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { registerUserDTO } from './dto/register-user.dto';
 import { loginUserDTO } from './dto/login-user.dto';
+import * as admin from 'firebase-admin';
+import { validateGoogleUserDTO } from './dto/validate-gg-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -48,6 +50,20 @@ export class AuthService {
         return await this.generateToken(payload);
     }
 
+    async validateGoogleUser(validateGoogleUserDto: validateGoogleUserDTO): Promise <any> {
+        let payload = null;
+        const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
+
+        if(user) {
+            payload = { _id: user._id.toString(), username: user.username, email: user.email };
+        } else {
+            // create google user into database
+            const googleUser = await this.UsersModel.create({ ...validateGoogleUserDto, refresh_token: "refresh_token_string" });
+            payload = { _id: googleUser._id.toString(), username: googleUser.username, email: googleUser.email };
+        }
+        return await this.generateToken(payload);
+    }
+
     async refreshToken(refresh_token: string) : Promise<any> {
         try {
             const verify = await this.jwtService.verifyAsync(refresh_token, {
@@ -82,5 +98,14 @@ export class AuthService {
         const salt = await bcrypt.genSalt(parseInt(process.env.SALT_ROUND));
         const hash = await bcrypt.hash(password, salt);
         return hash;
+    }
+
+    async verifyToken(idToken: string): Promise<any> {
+        try {
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            return decodedToken;
+        } catch (error) {
+            throw new UnauthorizedException('Invalid token');
+        }
     }
 }
