@@ -14,6 +14,7 @@ import { registerUserDTO } from './dto/register-user.dto';
 import { User } from 'src/users/schema/user.schema';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { loginUserDTO } from './dto/login-user.dto';
+import { validateGoogleUserDTO } from './dto/validate-gg-user.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -38,9 +39,19 @@ export class AuthController {
     return this.authService.refreshToken(refresh_token);
   }
 
-  @UseGuards(AuthGuard)
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
-  }
+    @UseGuards(AuthGuard)
+    @Get('profile')
+    getProfile(@Request() req) {
+        return req.user;
+    }
+
+    @Post('google')
+    async googleLogin(@Body('idToken') idToken: string, validateGoogleUserDto: validateGoogleUserDTO) {
+        const user = await this.authService.verifyToken(idToken);
+        validateGoogleUserDto = {
+            email: user.email,
+            username: user.name
+        };
+        return this.authService.validateGoogleUser(validateGoogleUserDto);
+    }
 }
