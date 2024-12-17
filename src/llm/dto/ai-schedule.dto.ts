@@ -1,6 +1,6 @@
 export interface AIScheduleDTO {
   student: {
-    type: string; // Be specific!
+    type: string;
     subjects: [string];
     learningChallenges: [string];
     learningStrengths: [string];

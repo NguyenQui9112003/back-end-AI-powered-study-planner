@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AIScheduleDTO } from './dto/ai-schedule.dto';
 
 @Injectable()
 export class LLMService {
   constructor(private configService: ConfigService) {}
 
-  async generateText(): Promise<string> {
+  async generateText(data: AIScheduleDTO): Promise<string> {
     const genAI = new GoogleGenerativeAI(
       this.configService.get('GEMINI_API_KEY'),
     );
@@ -14,7 +15,7 @@ export class LLMService {
       model: this.configService.get('GEMINI_MODEL'),
     });
 
-    const prompt = `
+    let prompt = `
 Please review the following study schedule and provide constructive feedback in JSON format. 
 Consider factors such as time allocation, balance between subjects, breaks, overall feasibility, 
 and alignment with the student's learning preferences. Identify potential bottlenecks and suggest 
@@ -28,7 +29,7 @@ improvements for optimization.
 * Are the study goals for each session realistic and measurable?  Provide examples of poorly defined goals and how to make them measurable (e.g., "Read Chapter 5" vs. "Read sections 5.1-5.3 of Chapter 5 and answer review questions 1-5").
 * What are some potential strategies to improve focus and productivity, considering the student's learning preferences and challenges?
 
-**InputJS ON Format: (Example)**
+**Input JSON Format (Example): **
 {
   "student": {
     "type": "Second-year undergraduate student",  // Be specific!
@@ -81,9 +82,10 @@ improvements for optimization.
   }
 }
 `;
+    prompt += '\n** User Input **\n' + JSON.stringify(data);
 
     const result = await model.generateContent(prompt);
-    console.log(result.response.text());
+    // console.log(result.response.text());
     return result.response.text();
   }
 }

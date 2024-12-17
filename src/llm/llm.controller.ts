@@ -6,8 +6,9 @@ import { LLMService } from './llm.service';
 @Controller('ai')
 export class LlmController {
   constructor(private aiService: LLMService) {}
-  @Post('register')
+
+  @Post('suggestion')
   register(): Promise<string> {
-    return this.aiService.generateText();
+    return this.aiService.generateText(null);
   }
 }
