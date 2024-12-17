@@ -2,7 +2,6 @@ import { Body, Controller, Post, Get, Query } from '@nestjs/common';
 import { createTaskDTO } from './dto/create-tasks.dto';
 import { updateTaskDTO } from './dto/update-tasks.dto';
 import { deleteTaskDTO } from './dto/delete-tasks.dto';
-import { getTaskDTO } from './dto/get-tasks.dto';
 import { TasksService } from './tasks.service';
 
 @Controller('tasks')
@@ -11,8 +10,8 @@ export class TasksController {
 
     // @Roles('user')
     @Get()
-    async getAllTasks(@Query() getAllTask: getTaskDTO) {
-        return await this.taskService.getAll(getAllTask);
+    async getAllTasks(@Query() condition: string) {
+        return await this.taskService.getAll(condition);
     }
 
     @Post('create')
