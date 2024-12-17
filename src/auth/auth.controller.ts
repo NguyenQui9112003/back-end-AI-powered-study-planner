@@ -39,19 +39,22 @@ export class AuthController {
     return this.authService.refreshToken(refresh_token);
   }
 
-    @UseGuards(AuthGuard)
-    @Get('profile')
-    getProfile(@Request() req) {
-        return req.user;
-    }
+  @UseGuards(AuthGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    return req.user;
+  }
 
-    @Post('google')
-    async googleLogin(@Body('idToken') idToken: string, validateGoogleUserDto: validateGoogleUserDTO) {
-        const user = await this.authService.verifyToken(idToken);
-        validateGoogleUserDto = {
-            email: user.email,
-            username: user.name
-        };
-        return this.authService.validateGoogleUser(validateGoogleUserDto);
-    }
+  @Post('google')
+  async googleLogin(
+    @Body('idToken') idToken: string,
+    validateGoogleUserDto: validateGoogleUserDTO,
+  ) {
+    const user = await this.authService.verifyToken(idToken);
+    validateGoogleUserDto = {
+      email: user.email,
+      username: user.name,
+    };
+    return this.authService.validateGoogleUser(validateGoogleUserDto);
+  }
 }
