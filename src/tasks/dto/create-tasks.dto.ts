@@ -1,30 +1,30 @@
 import { IsEnum, IsString } from 'class-validator';
 
 enum PriorityLevel {
-    LOW = 'Low',
-    MEDIUM = 'Medium',
-    HIGH = 'High',
+  LOW = 'Low',
+  MEDIUM = 'Medium',
+  HIGH = 'High',
 }
 
 enum TaskStatus {
-    TODO = 'Todo',
-    IN_PROGRESS = 'In Process',
-    COMPLETED = 'Completed',
+  TODO = 'Todo',
+  IN_PROGRESS = 'In Process',
+  COMPLETED = 'Completed',
 }
 
 export class createTaskDTO {
-    @IsString()
-    taskName: string;
+  @IsString()
+  taskName: string;
 
-    @IsString()
-    description: string;
+  @IsString()
+  description: string;
 
-    @IsEnum(PriorityLevel)
-    priorityLevel: PriorityLevel;
+  @IsEnum(PriorityLevel)
+  priorityLevel: PriorityLevel;
 
-    @IsString()
-    estimatedTime: string;
+  @IsString()
+  estimatedTime: string;
 
-    @IsEnum(TaskStatus)
-    status: TaskStatus;
+  @IsEnum(TaskStatus)
+  status: TaskStatus;
 }
