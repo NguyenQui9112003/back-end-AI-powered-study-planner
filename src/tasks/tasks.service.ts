@@ -5,7 +5,6 @@ import { Task, TaskDocument } from './schema/task.schema';
 import { createTaskDTO } from './dto/create-tasks.dto';
 import { updateTaskDTO } from './dto/update-tasks.dto';
 import { deleteTaskDTO } from './dto/delete-tasks.dto';
-import { getTaskDTO } from './dto/get-tasks.dto';
 
 @Injectable()
 export class TasksService {
@@ -65,7 +64,7 @@ export class TasksService {
         return res;
     }
 
-    async getAll(getAllTask: getTaskDTO): Promise<Task[]> {
+    async getAll(condition: string): Promise<Task[]> {
         return await this.TasksModel.find().exec();
     }
 
