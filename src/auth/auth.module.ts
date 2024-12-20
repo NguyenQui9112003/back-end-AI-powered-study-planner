@@ -1,14 +1,14 @@
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
-import { User, UserSchema } from '../users/schema/user.schema'
+import { User, UserSchema } from '../users/schema/user.schema';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { MongooseModule } from '@nestjs/mongoose'
+import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
-import * as dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 @Module({
@@ -32,7 +32,10 @@ dotenv.config();
           throw new Error('FIREBASE_KEY is not defined in .env');
         }
         const serviceAccount = JSON.parse(serviceAccountString);
-        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        serviceAccount.private_key = serviceAccount.private_key.replace(
+          /\\n/g,
+          '\n',
+        );
         return admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
@@ -43,6 +46,4 @@ dotenv.config();
   controllers: [AuthController],
   exports: ['FIREBASE_ADMIN'],
 })
-export class AuthModule { }
-
-
+export class AuthModule {}
