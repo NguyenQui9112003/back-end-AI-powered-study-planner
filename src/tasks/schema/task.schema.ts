@@ -11,24 +11,36 @@ enum PriorityLevel {
 
 enum TaskStatus {
   TODO = 'Todo',
-  IN_PROCESS = 'In Process',
   COMPLETED = 'Completed',
+  EXPIRED = 'Expired',
 }
 
 @Schema({ timestamps: true })
 export class Task {
-  @Prop({ type: String, required: true, unique: true })
+  // user
+  @Prop({ type: String, required: true })
+  email: string;
+
+  // name
+  @Prop({ type: String, required: true })
   taskName: string;
 
+  // description
   @Prop({ type: String, required: true })
   description: string;
 
+  // priority
   @Prop({ type: String, enum: PriorityLevel, required: true })
   priorityLevel: PriorityLevel;
 
-  @Prop({ type: String, required: true })
-  estimatedTime: string;
+  // estimated time
+  @Prop({ type: Date, required: true })
+  startDate: Date;
 
+  @Prop({ type: Date, required: true })
+  endDate: Date;
+
+  // status
   @Prop({ type: String, enum: TaskStatus, required: true })
   status: TaskStatus;
 }

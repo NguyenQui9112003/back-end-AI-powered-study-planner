@@ -10,8 +10,14 @@ export class TasksController {
 
     // @Roles('user')
     @Get()
-    async getAllTasks(@Query() condition: string) {
-        return await this.taskService.getAll(condition);
+    async getAllTasks(@Query('userName') userName: string ) {
+        return await this.taskService.getAll(userName);
+    }
+
+    @Post('find')
+    async find(@Body() body: { searchString: string }) {
+        const { searchString } = body;
+        return await this.taskService.findTaskWithSearchString(searchString);
     }
 
     @Post('create')
@@ -21,18 +27,11 @@ export class TasksController {
 
     @Post('update')
     async update(@Body() updateTaskDto: updateTaskDTO) {
-        return await this.taskService.update(updateTaskDto);
+        return await this.taskService.update(updateTaskDto); 
     }
 
     @Post('delete')
     async delete(@Body() deleteTaskDto: deleteTaskDTO) {
         return await this.taskService.delete(deleteTaskDto);
-    }
-
-    @Post('find')
-    async find(@Body() body: { searchString: string }) {
-        const { searchString } = body;
-        
-        return await this.taskService.findTaskWithSearchString(searchString);
     }
 }
