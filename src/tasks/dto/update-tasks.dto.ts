@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsString } from 'class-validator';
 
 enum PriorityLevel {
     LOW = 'Low',
@@ -8,22 +8,25 @@ enum PriorityLevel {
 
 enum TaskStatus {
     TODO = 'Todo',
-    IN_PROGRESS = 'In Process',
     COMPLETED = 'Completed',
+    EXPIRED = 'Expired',
 }
 
 export class updateTaskDTO {
     @IsString()
-    taskName: string;
+    email: string;
 
     @IsString()
-    description: string;
+    taskName: string;
 
     @IsEnum(PriorityLevel)
     priorityLevel: PriorityLevel;
 
-    @IsString()
-    estimatedTime: string;
+    @IsDate()
+    startDate: Date;
+
+    @IsDate()
+    endDate: Date;
 
     @IsEnum(TaskStatus)
     status: TaskStatus;
