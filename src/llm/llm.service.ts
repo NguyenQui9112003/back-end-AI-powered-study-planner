@@ -19,7 +19,7 @@ export class LLMService {
 Please review the following study schedule and provide constructive feedback in JSON format. 
 Consider factors such as time allocation, balance between subjects, breaks, overall feasibility, 
 and alignment with the student's learning preferences. Identify potential bottlenecks and suggest 
-improvements for optimization.
+improvements for optimization. Strictly response in a Output JSON Format below that can be directly parsed.
 
 **Specific Questions to Address:**
 
@@ -85,7 +85,7 @@ improvements for optimization.
     prompt += '\n** User Input **\n' + JSON.stringify(data);
 
     const result = await model.generateContent(prompt);
-    // console.log(result.response.text());
+    console.log(result.response.text());
     return result.response.text();
   }
 }
