@@ -6,32 +6,32 @@ import { TasksService } from './tasks.service';
 
 @Controller('tasks')
 export class TasksController {
-    constructor(private readonly taskService: TasksService) { }
+  constructor(private readonly taskService: TasksService) {}
 
-    // @Roles('user')
-    @Get()
-    async getAllTasks(@Query('userName') userName: string ) {
-        return await this.taskService.getAll(userName);
-    }
+  // @Roles('user')
+  @Get()
+  async getAllTasks(@Query('userName') userName: string) {
+    return await this.taskService.getAll(userName);
+  }
 
-    @Post('find')
-    async find(@Body() body: { searchString: string }) {
-        const { searchString } = body;
-        return await this.taskService.findTaskWithSearchString(searchString);
-    }
+  @Post('find')
+  async find(@Body() body: { searchString: string }) {
+    const { searchString } = body;
+    return await this.taskService.findTaskWithSearchString(searchString);
+  }
 
-    @Post('create')
-    async create(@Body() createTaskDto: createTaskDTO) {
-        return await this.taskService.create(createTaskDto);
-    }
+  @Post('create')
+  async create(@Body() createTaskDto: createTaskDTO) {
+    return await this.taskService.create(createTaskDto);
+  }
 
-    @Post('update')
-    async update(@Body() updateTaskDto: updateTaskDTO) {
-        return await this.taskService.update(updateTaskDto); 
-    }
+  @Post('update')
+  async update(@Body() updateTaskDto: updateTaskDTO) {
+    return await this.taskService.update(updateTaskDto);
+  }
 
-    @Post('delete')
-    async delete(@Body() deleteTaskDto: deleteTaskDTO) {
-        return await this.taskService.delete(deleteTaskDto);
-    }
+  @Post('delete')
+  async delete(@Body() deleteTaskDto: deleteTaskDTO) {
+    return await this.taskService.delete(deleteTaskDto);
+  }
 }

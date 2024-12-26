@@ -3,13 +3,13 @@ import { HydratedDocument } from 'mongoose';
 
 export type TaskDocument = HydratedDocument<Task>;
 
-enum PriorityLevel {
+export enum PriorityLevel {
   LOW = 'Low',
   MEDIUM = 'Medium',
   HIGH = 'High',
 }
 
-enum TaskStatus {
+export enum TaskStatus {
   TODO = 'Todo',
   COMPLETED = 'Completed',
   EXPIRED = 'Expired',
