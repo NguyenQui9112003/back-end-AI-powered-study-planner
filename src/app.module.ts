@@ -12,6 +12,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TasksModule } from './tasks/tasks.module';
+import { LLMModule } from './llm/llm.module';
 
 @Module({
   imports: [
@@ -22,9 +23,9 @@ import { TasksModule } from './tasks/tasks.module';
     UsersModule,
     TasksModule,
     AuthModule,
+    LLMModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-
-export class AppModule { }
+export class AppModule {}

@@ -1,16 +1,5 @@
 import { IsDate, IsEnum, IsString } from 'class-validator';
-
-enum PriorityLevel {
-  LOW = 'Low',
-  MEDIUM = 'Medium',
-  HIGH = 'High',
-}
-
-enum TaskStatus {
-  TODO = 'Todo',
-  COMPLETED = 'Completed',
-  EXPIRED = 'Expired',
-}
+import { PriorityLevel, TaskStatus } from '../schema/task.schema';
 
 export class createTaskDTO {
   @IsString()
