@@ -11,6 +11,7 @@ export enum PriorityLevel {
 
 export enum TaskStatus {
   TODO = 'Todo',
+  IN_PROGRESS = 'In Progress',
   COMPLETED = 'Completed',
   EXPIRED = 'Expired',
 }
@@ -19,10 +20,10 @@ export enum TaskStatus {
 export class Task {
   // user
   @Prop({ type: String, required: true })
-  email: string;
+  username: string;
 
   // name
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, unique: true })
   taskName: string;
 
   // description
@@ -33,7 +34,11 @@ export class Task {
   @Prop({ type: String, enum: PriorityLevel, required: true })
   priorityLevel: PriorityLevel;
 
-  // estimated time
+  // focus time
+  @Prop({ type: String })
+  timeFocus: string; // calculate by s
+
+  // deadline
   @Prop({ type: Date, required: true })
   startDate: Date;
 

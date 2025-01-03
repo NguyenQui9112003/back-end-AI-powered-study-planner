@@ -1,9 +1,4 @@
-import { IsString } from 'class-validator';
-
 export class deleteTaskDTO {
-  @IsString()
-  email: string;
-
-  @IsString()
+  username: string;
   taskName: string;
 }

@@ -1,14 +1,13 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Task, TaskDocument } from './schema/task.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+
 import { createTaskDTO } from './dto/create-tasks.dto';
 import { updateTaskDTO } from './dto/update-tasks.dto';
 import { deleteTaskDTO } from './dto/delete-tasks.dto';
+import { focusTimeDTO } from './dto/focus-time.dto';
+import { TaskStatus } from './schema/task.schema';
+import { Task, TaskDocument } from './schema/task.schema';
 
 @Injectable()
 export class TasksService {
@@ -18,82 +17,64 @@ export class TasksService {
 
   async create(createTask: createTaskDTO): Promise<any> {
     const task = await this.TasksModel.findOne({
-      email: createTask.email,
+      username: createTask.username,
       taskName: createTask.taskName,
     }).exec();
 
     if (task) {
-      throw new ConflictException('Conflict Exception', {
+      throw new ConflictException('Task existed', {
         cause: new Error(),
         description: 'Error: Task existed',
       });
     }
 
     const createdTask = await this.TasksModel.create({
-      email: createTask.email,
+      username: createTask.username,
       taskName: createTask.taskName,
       description: createTask.description,
       priorityLevel: createTask.priorityLevel,
+      timeFocus: createTask.timeFocus,
       startDate: createTask.startDate,
       endDate: createTask.endDate,
       status: createTask.status,
     });
 
     const res = createdTask.toObject();
-    // console.log(res);
     return res;
-
-    // delete res.__v;
-    // delete res._id;
   }
 
   async update(updateTask: updateTaskDTO): Promise<Task> {
-    const task = await this.TasksModel.findOne({
-      email: updateTask.email,
-      taskName: updateTask.taskName,
-    }).exec();
-
-    if (!task) {
-      throw new NotFoundException('Not Found Exception', {
-        cause: new Error(),
-        description: `Task with name "${updateTask.taskName}" not found.`,
-      });
-    }
-
     const { taskName, ...updateFields } = updateTask;
-
     const updatedTask = await this.TasksModel.findOneAndUpdate(
       {
-        email: updateTask.email,
-        taskName: taskName,
-      },
-      updateFields, // data need to update
+          username: updateTask.username,
+          taskName: taskName,
+      }, 
+      updateFields,
       {
         new: true,
         timestamps: true,
       },
     );
-
     const res = updatedTask.toObject();
-    // console.log(res);
     return res;
   }
 
   async delete(deleteTask: deleteTaskDTO): Promise<any> {
     const task = await this.TasksModel.findOne({
-      email: deleteTask.email,
+      username: deleteTask.username,
       taskName: deleteTask.taskName,
     }).exec();
 
     if (!task) {
-      throw new NotFoundException('Not Found Exception', {
+      throw new NotFoundException('Not found', {
         cause: new Error(),
-        description: `Task with name "${deleteTask.taskName}" not found.`,
+        description: `Error: Task with name "${deleteTask.taskName}" not found.`,
       });
     }
 
     const res = await this.TasksModel.deleteOne({
-      email: deleteTask.email,
+      username: deleteTask.username,
       taskName: deleteTask.taskName,
     }).exec();
 
@@ -101,19 +82,33 @@ export class TasksService {
   }
 
   async getAll(user: string): Promise<Task[]> {
-    const res = await this.TasksModel.find({
-      email: user,
-    }).exec();
-
-    //console.log(res);
-    return res;
+    const tasks = await this.TasksModel.find({ username: user }).exec();
+    const currentDate = new Date();
+    for (const task of tasks) {
+      // check 'Expired'
+      if (task.endDate < currentDate && task.status !== TaskStatus.EXPIRED) {
+        task.status = TaskStatus.EXPIRED; 
+        await task.save();
+      }
+    }
+    return tasks;
   }
 
-  async findTaskWithSearchString(searchString: string): Promise<Task[]> {
-    const res = await this.TasksModel.find({
-      taskName: { $regex: searchString, $options: 'i' }, // không phân biệt chữ hoa/thường
-    });
-    // console.log(res);
-    return res;
+  async updateFocusTime(timer: focusTimeDTO): Promise<void> {
+    const task = await this.TasksModel.findOne({
+      username: timer.username,
+      taskName: timer.taskName,
+    }).exec();
+
+    if (timer.status == "Todo") {
+      task.status = TaskStatus.IN_PROGRESS;
+    }
+
+    const currentFocusTime = parseInt(task.timeFocus || '0', 10);
+    const additionalFocusTime = parseInt(timer.focusTime, 10); 
+    const updatedFocusTime = currentFocusTime + additionalFocusTime;
+
+    task.timeFocus = updatedFocusTime.toString();
+    await task.save();
   }
 }

@@ -1,22 +1,14 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UsePipes,
-  Request,
-  UseGuards,
-  ValidationPipe,
-} from '@nestjs/common';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-import { registerUserDTO } from './dto/register-user.dto';
-import { User } from 'src/users/schema/user.schema';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { loginUserDTO } from './dto/login-user.dto';
-import { validateGoogleUserDTO } from './dto/validate-gg-user.dto';
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 
-@ApiTags('Auth')
+import { User } from 'src/users/schema/user.schema';
+import { loginUserDTO } from './dto/login-user.dto';
+import { registerUserDTO } from './dto/register-user.dto';
+import { validateGoogleUserDTO } from './dto/validate-gg-user.dto';
+// import { ApiResponse, ApiTags } from '@nestjs/swagger';
+
+// @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -27,12 +19,12 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiResponse({ status: 201, description: 'Login successfully' })
-  @ApiResponse({ status: 401, description: 'Login fail' })
-  @UsePipes(ValidationPipe)
   login(@Body() loginUserDto: loginUserDTO): Promise<any> {
     return this.authService.login(loginUserDto);
   }
+  // @ApiResponse({ status: 201, description: 'Login successfully' })
+  // @ApiResponse({ status: 401, description: 'Login fail' })
+  // @UsePipes(ValidationPipe)
 
   @Post('refresh-token')
   refreshToken(@Body() { refresh_token }): Promise<any> {
@@ -46,15 +38,9 @@ export class AuthController {
   }
 
   @Post('google')
-  async googleLogin(
-    @Body('idToken') idToken: string,
-    validateGoogleUserDto: validateGoogleUserDTO,
-  ) {
+  async googleLogin(@Body('idToken') idToken: string, validateGoogleUserDto: validateGoogleUserDTO) {
     const user = await this.authService.verifyToken(idToken);
-    validateGoogleUserDto = {
-      email: user.email,
-      username: user.name,
-    };
+    validateGoogleUserDto = { email: user.email };
     return this.authService.validateGoogleUser(validateGoogleUserDto);
   }
 }

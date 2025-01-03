@@ -1,23 +1,18 @@
 import { Body, Controller, Post, Get, Query } from '@nestjs/common';
+
+import { TasksService } from './tasks.service';
 import { createTaskDTO } from './dto/create-tasks.dto';
 import { updateTaskDTO } from './dto/update-tasks.dto';
 import { deleteTaskDTO } from './dto/delete-tasks.dto';
-import { TasksService } from './tasks.service';
+import { focusTimeDTO } from './dto/focus-time.dto';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly taskService: TasksService) {}
 
-  // @Roles('user')
   @Get()
   async getAllTasks(@Query('userName') userName: string) {
     return await this.taskService.getAll(userName);
-  }
-
-  @Post('find')
-  async find(@Body() body: { searchString: string }) {
-    const { searchString } = body;
-    return await this.taskService.findTaskWithSearchString(searchString);
   }
 
   @Post('create')
@@ -33,5 +28,10 @@ export class TasksController {
   @Post('delete')
   async delete(@Body() deleteTaskDto: deleteTaskDTO) {
     return await this.taskService.delete(deleteTaskDto);
+  }
+
+  @Post('update-focus-time')
+  async updateFocusTime(@Body() focusTimeDto: focusTimeDTO) {
+    return await this.taskService.updateFocusTime(focusTimeDto);
   }
 }
