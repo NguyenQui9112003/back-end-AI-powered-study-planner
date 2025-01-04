@@ -32,7 +32,7 @@ export class AuthService {
       throw new UnauthorizedException('Error: Account exist');
     }
 
-    return await this.UsersModel.create({ username: registerUserDto.username, email: "", password: hashPassword,
+    return await this.UsersModel.create({ username: registerUserDto.username, email: null, password: hashPassword,
       refresh_token: 'refresh_token_string'
     });
   }
@@ -46,8 +46,8 @@ export class AuthService {
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
-    // Tạo JWT token
-    const payload = { _id: user._id.toString(), username: user.username };
+    // create JWT token
+    const payload = { _id: user._id.toString(), username: user.username, is_activated: user.is_activated };
     return await this.generateToken(payload);
   }
 
@@ -62,11 +62,11 @@ export class AuthService {
       const googleUser = await this.UsersModel.create({
         username: validateGoogleUserDto.email,
         email: validateGoogleUserDto.email,
-        password: "",
+        password: null,
         is_activated: true,
         refresh_token: 'refresh_token_string',
       });
-      payload = {_id: googleUser._id.toString(), username: googleUser.username };
+      payload = { _id: googleUser._id.toString(), username: googleUser.username, is_activated: googleUser.is_activated };
     }
     return await this.generateToken(payload);
   }
@@ -76,7 +76,7 @@ export class AuthService {
       const verify = await this.jwtService.verifyAsync(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-      const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token });
+      const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token: verify.refresh_token });
       if (checkExistToken) {
         return this.generateToken({ _id: verify._id.toString(), username: verify.username });
       } else {
