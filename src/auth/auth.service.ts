@@ -57,6 +57,7 @@ export class AuthService {
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
+
     // Tạo JWT token
     const payload = {
       _id: user._id.toString(),
@@ -95,27 +96,24 @@ export class AuthService {
 
   async refreshToken(refresh_token: string): Promise<any> {
     try {
-      const verify = await this.jwtService.verifyAsync(refresh_token, {
+      const verify = this.jwtService.verify(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-
       const checkExistToken = await this.UsersModel.findOne({
         username: verify.username,
         refresh_token,
       });
-
-      if (!checkExistToken) {
+      if (checkExistToken) {
+        return this.generateToken({
+          _id: verify._id.toString(),
+          username: verify.username,
+        });
+      } else {
         throw new HttpException(
           'Refresh token is not valid',
           HttpStatus.BAD_REQUEST,
         );
       }
-
-      return this.generateToken({
-        _id: verify._id.toString(),
-        username: verify.username,
-        is_activated: verify.is_activated,
-      });
     } catch (error) {
       Logger.error(error);
       throw new HttpException('Something error', HttpStatus.BAD_REQUEST);
