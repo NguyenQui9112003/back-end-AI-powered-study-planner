@@ -37,7 +37,7 @@ export class AuthService {
 
     return await this.UsersModel.create({
       username: registerUserDto.username,
-      email: '',
+      email: null,
       password: hashPassword,
       refresh_token: 'refresh_token_string',
     });
@@ -57,8 +57,7 @@ export class AuthService {
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
-
-    // Tạo JWT token
+    // create JWT token
     const payload = {
       _id: user._id.toString(),
       username: user.username,
