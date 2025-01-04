@@ -32,7 +32,7 @@ export class AuthService {
       throw new UnauthorizedException('Error: Account exist');
     }
 
-    return await this.UsersModel.create({ username: registerUserDto.username, email: null, password: hashPassword,
+    return await this.UsersModel.create({ username: registerUserDto.username, email: registerUserDto.username, password: hashPassword,
       refresh_token: 'refresh_token_string'
     });
   }
