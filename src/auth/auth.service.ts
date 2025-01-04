@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -22,39 +23,57 @@ export class AuthService {
     @InjectModel(User.name) private UsersModel: Model<UserDocument>,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   async register(registerUserDto: registerUserDTO): Promise<User> {
     const hashPassword = await this.hashPassword(registerUserDto.password);
-    const user = await this.UsersModel.findOne({ username: registerUserDto.username }).exec();
+    const user = await this.UsersModel.findOne({
+      username: registerUserDto.username,
+    }).exec();
 
     if (user) {
       throw new UnauthorizedException('Error: Account exist');
     }
 
-    return await this.UsersModel.create({ username: registerUserDto.username, email: "", password: hashPassword,
-      refresh_token: 'refresh_token_string'
+    return await this.UsersModel.create({
+      username: registerUserDto.username,
+      email: '',
+      password: hashPassword,
+      refresh_token: 'refresh_token_string',
     });
   }
 
   async login(loginUserDto: loginUserDTO): Promise<any> {
-    const user = await this.UsersModel.findOne({ username: loginUserDto.username }).exec();
+    const user = await this.UsersModel.findOne({
+      username: loginUserDto.username,
+    }).exec();
     if (!user) {
       throw new UnauthorizedException('Error: Account no exist');
     }
-    const checkPass = await bcrypt.compare( loginUserDto.password, user.password );
+    const checkPass = await bcrypt.compare(
+      loginUserDto.password,
+      user.password,
+    );
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
     // Tạo JWT token
-    const payload = { _id: user._id.toString(), username: user.username };
+    const payload = {
+      _id: user._id.toString(),
+      username: user.username,
+      is_activated: user.is_activated,
+    };
     return await this.generateToken(payload);
   }
 
-  async validateGoogleUser( validateGoogleUserDto: validateGoogleUserDTO ): Promise<any> {
-    var payload = null;
+  async validateGoogleUser(
+    validateGoogleUserDto: validateGoogleUserDTO,
+  ): Promise<any> {
+    let payload = null;
 
-    const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
+    const user = await this.UsersModel.findOne({
+      email: validateGoogleUserDto.email,
+    }).exec();
     if (user) {
       payload = { _id: user._id.toString(), username: user.email };
     } else {
@@ -62,11 +81,14 @@ export class AuthService {
       const googleUser = await this.UsersModel.create({
         username: validateGoogleUserDto.email,
         email: validateGoogleUserDto.email,
-        password: "",
+        password: '',
         is_activated: true,
         refresh_token: 'refresh_token_string',
       });
-      payload = {_id: googleUser._id.toString(), username: googleUser.username };
+      payload = {
+        _id: googleUser._id.toString(),
+        username: googleUser.username,
+      };
     }
     return await this.generateToken(payload);
   }
@@ -76,18 +98,35 @@ export class AuthService {
       const verify = await this.jwtService.verifyAsync(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-      const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token });
-      if (checkExistToken) {
-        return this.generateToken({ _id: verify._id.toString(), username: verify.username });
-      } else {
-        throw new HttpException('Refresh token is not valid', HttpStatus.BAD_REQUEST);
+
+      const checkExistToken = await this.UsersModel.findOne({
+        username: verify.username,
+        refresh_token,
+      });
+
+      if (!checkExistToken) {
+        throw new HttpException(
+          'Refresh token is not valid',
+          HttpStatus.BAD_REQUEST,
+        );
       }
+
+      return this.generateToken({
+        _id: verify._id.toString(),
+        username: verify.username,
+        is_activated: verify.is_activated,
+      });
     } catch (error) {
+      Logger.error(error);
       throw new HttpException('Something error', HttpStatus.BAD_REQUEST);
     }
   }
 
-  private async generateToken(payload: { _id: string; username: string }) {
+  private async generateToken(payload: {
+    _id: string;
+    username: string;
+    is_activated: boolean;
+  }) {
     const access_token = await this.jwtService.signAsync(payload);
     const refresh_token = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
@@ -95,7 +134,7 @@ export class AuthService {
     });
     await this.UsersModel.findOneAndUpdate(
       { username: payload.username },
-      { refresh_token: refresh_token }
+      { refresh_token: refresh_token },
     );
     return { access_token, refresh_token };
   }
@@ -111,6 +150,7 @@ export class AuthService {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       return decodedToken;
     } catch (error) {
+      Logger.debug(error);
       throw new UnauthorizedException('Invalid token');
     }
   }
