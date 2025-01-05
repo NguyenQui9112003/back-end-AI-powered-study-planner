@@ -98,21 +98,24 @@ export class AuthService {
       const verify = this.jwtService.verify(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
+
       const checkExistToken = await this.UsersModel.findOne({
         username: verify.username,
         refresh_token,
       });
-      if (checkExistToken) {
-        return this.generateToken({
-          _id: verify._id.toString(),
-          username: verify.username,
-        });
-      } else {
+
+      if (!checkExistToken) {
         throw new HttpException(
           'Refresh token is not valid',
           HttpStatus.BAD_REQUEST,
         );
       }
+
+      return this.generateToken({
+        _id: verify._id.toString(),
+        username: verify.username,
+        is_activated: checkExistToken.is_activated,
+      });
     } catch (error) {
       Logger.error(error);
       throw new HttpException('Something error', HttpStatus.BAD_REQUEST);
