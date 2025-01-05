@@ -126,7 +126,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       is_activated: user.is_activated,
-      hasPassword: !!user.password, // True if password exists, false otherwise
+      hasPassword: user.password && user.password.length > 0, 
     });
     }
   async sendOTP(req: any): Promise<any> {
@@ -187,6 +187,25 @@ export class AuthService {
 
     } catch (error) {
       throw new HttpException('Failed to update the password: ' + error, HttpStatus.BAD_REQUEST);
+
+    }
+    return;
+  }
+  async createPassword(req: any): Promise<any> {
+    const user = await this.UsersModel.findOne({ email: req.email }).select('password').exec();
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const hashedNewPassword = await this.hashPassword(req.newPassword);
+    try{
+      await this.UsersModel.findOneAndUpdate(
+        { email: req.email },
+        { password: hashedNewPassword }
+      );
+
+    } catch (error) {
+      throw new HttpException('Failed to create the password: ' + error, HttpStatus.BAD_REQUEST);
 
     }
     return;

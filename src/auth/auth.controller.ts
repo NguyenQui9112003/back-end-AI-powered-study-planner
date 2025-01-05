@@ -45,6 +45,11 @@ export class AuthController {
     console.log(req);
     return this.authService.changePassword(req);
   }
+  @Post('createPassword') 
+  createPassword(@Body() req: any): Promise<any> {
+    console.log(req);
+    return this.authService.createPassword(req);
+  }
   @Post('google')
   async googleLogin(@Body('idToken') idToken: string, validateGoogleUserDto: validateGoogleUserDTO) {
     const user = await this.authService.verifyToken(idToken);
