@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -23,7 +24,7 @@ export class AuthService {
     @InjectModel(User.name) private UsersModel: Model<UserDocument>,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   async register(registerUserDto: registerUserDTO): Promise<User> {
     const hashPassword = await this.hashPassword(registerUserDto.password);
@@ -44,11 +45,16 @@ export class AuthService {
   }
 
   async login(loginUserDto: loginUserDTO): Promise<any> {
-    const user = await this.UsersModel.findOne({ username: loginUserDto.username }).exec();
+    const user = await this.UsersModel.findOne({
+      username: loginUserDto.username,
+    }).exec();
     if (!user) {
       throw new UnauthorizedException('Error: Account no exist');
     }
-    const checkPass = await bcrypt.compare( loginUserDto.password, user.password );
+    const checkPass = await bcrypt.compare(
+      loginUserDto.password,
+      user.password,
+    );
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
@@ -77,7 +83,7 @@ export class AuthService {
 
   async refreshToken(refresh_token: string): Promise<any> {
     try {
-      const verify = await this.jwtService.verifyAsync(refresh_token, {
+      const verify = this.jwtService.verify(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token});
@@ -87,6 +93,7 @@ export class AuthService {
         throw new HttpException('Refresh token is not valid', HttpStatus.BAD_REQUEST);
       }
     } catch (error) {
+      Logger.error(error);
       throw new HttpException('Something error', HttpStatus.BAD_REQUEST);
     }
   }
@@ -116,6 +123,7 @@ export class AuthService {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       return decodedToken;
     } catch (error) {
+      Logger.debug(error);
       throw new UnauthorizedException('Invalid token');
     }
   }
