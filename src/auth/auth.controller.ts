@@ -36,9 +36,9 @@ export class AuthController {
     console.log(req);
     return this.authService.sendOTP(req);
   }
-  @Get('verifyAccount')
+  @Post('verifyAccount')
   emailVerify(@Body() req) {
-    return this.authService.verifyWithEmail(req.user);
+    return this.authService.verifyWithEmail(req);
   }
   @Post('changePassword') 
   changePassword(@Body() req: any): Promise<any> {

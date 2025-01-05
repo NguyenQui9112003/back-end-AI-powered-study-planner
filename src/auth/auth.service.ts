@@ -155,13 +155,14 @@ export class AuthService {
   }
     
   async verifyWithEmail(req: any): Promise<any> {
+    console.log(req);
     try{
       await this.UsersModel.findOneAndUpdate(
         { email: req.email },
         { is_activated: true }
       );
     } catch (error) {
-      throw new HttpException('Failed to verifyd: ' + error, HttpStatus.BAD_REQUEST);
+      throw new HttpException('Failed to verify: ' + error, HttpStatus.BAD_REQUEST);
     }
     return;
   }
