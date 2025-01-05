@@ -1,3 +1,4 @@
+import { IsDate, IsEnum, IsString } from 'class-validator';
 import { PriorityLevel, TaskStatus } from '../schema/task.schema';
 
 export class updateTaskDTO {
