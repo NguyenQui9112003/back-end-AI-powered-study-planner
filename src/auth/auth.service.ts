@@ -82,7 +82,7 @@ export class AuthService {
       });
       const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token});
       if (checkExistToken) {
-        return this.generateToken({ _id: verify._id.toString(), username: verify.username });
+        return this.generateToken({ _id: verify._id.toString(), username: verify.username, is_activated: verify.is_activated });
       } else {
         throw new HttpException('Refresh token is not valid', HttpStatus.BAD_REQUEST);
       }
@@ -91,7 +91,7 @@ export class AuthService {
     }
   }
 
-  private async generateToken(payload: { _id: string; username: string }) {
+  private async generateToken(payload: { _id: string; username: string; is_activated: boolean }) {
     const access_token = await this.jwtService.signAsync(payload);
     const refresh_token = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
@@ -99,7 +99,8 @@ export class AuthService {
     });
     await this.UsersModel.findOneAndUpdate(
       { username: payload.username },
-      { refresh_token: refresh_token }
+      { refresh_token: refresh_token },
+      { is_activated: payload.is_activated }
     );
     return { access_token, refresh_token };
   }
