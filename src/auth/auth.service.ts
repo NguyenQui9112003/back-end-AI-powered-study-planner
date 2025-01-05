@@ -16,6 +16,7 @@ import { loginUserDTO } from './dto/login-user.dto';
 import { registerUserDTO } from './dto/register-user.dto';
 import { validateGoogleUserDTO } from './dto/validate-gg-user.dto';
 import { User, UserDocument } from '../users/schema/user.schema';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +38,7 @@ export class AuthService {
 
     return await this.UsersModel.create({
       username: registerUserDto.username,
-      email: null,
+      email: '',
       password: hashPassword,
       refresh_token: 'refresh_token_string',
     });
@@ -75,7 +76,11 @@ export class AuthService {
       email: validateGoogleUserDto.email,
     }).exec();
     if (user) {
-      payload = { _id: user._id.toString(), username: user.email };
+      payload = {
+        _id: user._id.toString(),
+        username: user.email,
+        is_activated: user.is_activated,
+      };
     } else {
       // create google user into database
       const googleUser = await this.UsersModel.create({
@@ -98,7 +103,7 @@ export class AuthService {
       const verify = this.jwtService.verify(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-
+      
       const checkExistToken = await this.UsersModel.findOne({
         username: verify.username,
         refresh_token,
@@ -114,7 +119,7 @@ export class AuthService {
       return this.generateToken({
         _id: verify._id.toString(),
         username: verify.username,
-        is_activated: checkExistToken.is_activated,
+        is_activated: checkExistToken.is_activated
       });
     } catch (error) {
       Logger.error(error);
@@ -153,5 +158,88 @@ export class AuthService {
       Logger.debug(error);
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  async getProfileInfo(req: any): Promise<any> {
+    const user = await this.UsersModel.findOne({ username: req.username })
+      .select('username email is_activated password')
+      .exec();
+    return {
+      username: user.username,
+      email: user.email,
+      is_activated: user.is_activated,
+      hasPassword: !!user.password, // True if password exists, false otherwise
+    };
+  }
+  async sendOTP(req: any): Promise<any> {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'aistudyplanner21ktpm2@gmail.com',
+        pass: 'niwg yexn cjsx chof',
+      },
+      from: 'aistudyplanner21ktpm2@gmail.com',
+    });
+    const mailOptions = {
+      from: 'aistudyplanner21ktpm2@gmail.com',
+      to: req.email,
+      subject: 'AI Study Planner Verification code',
+      text: `Your OTP code is: ${otp}`,
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+    return { otp: await this.hashPassword(otp) };
+  }
+
+  async verifyWithEmail(req: any): Promise<any> {
+    console.log(req);
+    try {
+      await this.UsersModel.findOneAndUpdate(
+        { email: req.email },
+        { is_activated: true },
+      );
+    } catch (error) {
+      throw new HttpException(
+        'Failed to verify: ' + error,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return;
+  }
+  async changePassword(req: any): Promise<any> {
+    const user = await this.UsersModel.findOne({ email: req.email })
+      .select('password')
+      .exec();
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const isMatch = await bcrypt.compare(req.currentPassword, user.password);
+    if (user.password !== '' && !isMatch) {
+      throw new HttpException(
+        'Current password is incorrect',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const hashedNewPassword = await this.hashPassword(req.newPassword);
+    try {
+      await this.UsersModel.findOneAndUpdate(
+        { email: req.email },
+        { password: hashedNewPassword },
+      );
+    } catch (error) {
+      throw new HttpException(
+        'Failed to update the password: ' + error,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return;
   }
 }

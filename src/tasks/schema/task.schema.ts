@@ -55,3 +55,5 @@ export class Task {
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);
+
+TaskSchema.index({ username: 1, taskName: 1 }, { unique: true });
