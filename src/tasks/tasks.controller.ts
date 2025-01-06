@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query, UseGuards } from '@nestjs/common';
 
 import { TasksService } from './tasks.service';
 import { createTaskDTO } from './dto/create-tasks.dto';
@@ -10,7 +10,7 @@ import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly taskService: TasksService) {}
+  constructor(private readonly taskService: TasksService) {};
 
   @UseGuards(AuthGuard)
   @Get()

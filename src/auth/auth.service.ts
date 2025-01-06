@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   async validateGoogleUser(validateGoogleUserDto: validateGoogleUserDTO): Promise<any> {
-    var payload = null;
+    let payload = null;
     const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
     if (user) {
       payload = { _id: user._id.toString(), username: user.username, is_activated: user.is_activated };
@@ -81,12 +81,24 @@ export class AuthService {
       const verify = await this.jwtService.verifyAsync(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-      const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token });
-      if (checkExistToken) {
-        return this.generateToken({ _id: verify._id.toString(), username: verify.username, is_activated: verify.is_activated });
-      } else {
-        throw new HttpException('Refresh token is not valid', HttpStatus.BAD_REQUEST);
+      
+      const checkExistToken = await this.UsersModel.findOne({
+        username: verify.username,
+        refresh_token,
+      });
+
+      if (!checkExistToken) {
+        throw new HttpException(
+          'Refresh token is not valid',
+          HttpStatus.BAD_REQUEST,
+        );
       }
+
+      return this.generateToken({
+        _id: verify._id.toString(),
+        username: verify.username,
+        is_activated: checkExistToken.is_activated
+      });
     } catch (error) {
       throw new HttpException('Something error', HttpStatus.BAD_REQUEST);
     }
