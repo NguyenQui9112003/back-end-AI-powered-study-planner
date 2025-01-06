@@ -62,7 +62,7 @@ export class AuthService {
     var payload = null;
     const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
     if (user) {
-      payload = { _id: user._id.toString(), username: user.email, is_activated: user.is_activated };
+      payload = { _id: user._id.toString(), username: user.username, is_activated: user.is_activated };
     } else {
       // create google user into database
       const googleUser = await this.UsersModel.create({
@@ -122,6 +122,7 @@ export class AuthService {
   }
 
   async getProfileInfo(req: any): Promise<any> {
+    console.log(req);
     const user = await this.UsersModel.findOne({ username: req.username }).select('username email is_activated password').exec();
     return ({
       username: user.username,
