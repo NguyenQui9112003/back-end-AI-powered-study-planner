@@ -1,13 +1,6 @@
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 
 import { User } from 'src/users/schema/user.schema';
 import { loginUserDTO } from './dto/login-user.dto';
@@ -38,25 +31,32 @@ export class AuthController {
   getProfile(@Request() req) {
     return this.authService.getProfileInfo(req.user);
   }
+
   @Post("sendOTP")
   sendOTP(@Body() req){
     console.log(req);
     return this.authService.sendOTP(req);
   }
+
   @Post('verifyAccount')
   emailVerify(@Body() req) {
     return this.authService.verifyWithEmail(req);
   }
+
   @Post('changePassword') 
   changePassword(@Body() req: any): Promise<any> {
     console.log(req);
     return this.authService.changePassword(req);
   }
+
+  @Post('createPassword') 
+  createPassword(@Body() req: any): Promise<any> {
+    console.log(req);
+    return this.authService.createPassword(req);
+  }
+  
   @Post('google')
-  async googleLogin(
-    @Body('idToken') idToken: string,
-    validateGoogleUserDto: validateGoogleUserDTO,
-  ) {
+  async googleLogin(@Body('idToken') idToken: string, validateGoogleUserDto: validateGoogleUserDTO) {
     const user = await this.authService.verifyToken(idToken);
     validateGoogleUserDto = { email: user.email };
     return this.authService.validateGoogleUser(validateGoogleUserDto);

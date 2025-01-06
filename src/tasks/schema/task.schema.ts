@@ -27,7 +27,7 @@ export class Task {
   taskName: string;
 
   // description
-  @Prop({ type: String })
+  @Prop({ type: String, required: true })
   description: string;
 
   // priority
@@ -35,12 +35,8 @@ export class Task {
   priorityLevel: PriorityLevel;
 
   // focus time
-  @Prop({ type: Number })
-  timeFocus: number; // calculate by seconds
-
-  // expected time
-  @Prop({ type: Number })
-  expectedTime: number; // calculate by seconds
+  @Prop({ type: String })
+  timeFocus: string; // calculate by s
 
   // deadline
   @Prop({ type: Date, required: true })

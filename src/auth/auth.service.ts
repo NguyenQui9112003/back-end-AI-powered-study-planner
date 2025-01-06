@@ -5,7 +5,6 @@ import {
   HttpException,
   HttpStatus,
   UnauthorizedException,
-  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -24,83 +23,62 @@ export class AuthService {
     @InjectModel(User.name) private UsersModel: Model<UserDocument>,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   async register(registerUserDto: registerUserDTO): Promise<User> {
     const hashPassword = await this.hashPassword(registerUserDto.password);
-    const user = await this.UsersModel.findOne({
-      username: registerUserDto.username,
-    }).exec();
 
+    const user = await this.UsersModel.findOne({ username: registerUserDto.username }).exec();
     if (user) {
       throw new UnauthorizedException('Error: Account exist');
     }
 
+    const userEmail = await this.UsersModel.findOne({ email: registerUserDto.email }).exec();
+    if (userEmail) {
+      throw new UnauthorizedException('Error: Email exist');
+    }
+
     return await this.UsersModel.create({
-      username: registerUserDto.username,
-      email: '',
-      password: hashPassword,
-      refresh_token: 'refresh_token_string',
+      username: registerUserDto.username, email: registerUserDto.email, password: hashPassword,
+      refresh_token: 'refresh_token_string'
     });
   }
 
   async login(loginUserDto: loginUserDTO): Promise<any> {
-    const user = await this.UsersModel.findOne({
-      username: loginUserDto.username,
-    }).exec();
+    const user = await this.UsersModel.findOne({ username: loginUserDto.username }).exec();
     if (!user) {
       throw new UnauthorizedException('Error: Account no exist');
     }
-    const checkPass = await bcrypt.compare(
-      loginUserDto.password,
-      user.password,
-    );
+    const checkPass = await bcrypt.compare(loginUserDto.password, user.password);
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
     // create JWT token
-    const payload = {
-      _id: user._id.toString(),
-      username: user.username,
-      is_activated: user.is_activated,
-    };
+    const payload = { _id: user._id.toString(), username: user.username, is_activated: user.is_activated };
     return await this.generateToken(payload);
   }
 
-  async validateGoogleUser(
-    validateGoogleUserDto: validateGoogleUserDTO,
-  ): Promise<any> {
-    let payload = null;
-
-    const user = await this.UsersModel.findOne({
-      email: validateGoogleUserDto.email,
-    }).exec();
+  async validateGoogleUser(validateGoogleUserDto: validateGoogleUserDTO): Promise<any> {
+    var payload = null;
+    const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
     if (user) {
-      payload = {
-        _id: user._id.toString(),
-        username: user.email,
-        is_activated: user.is_activated,
-      };
+      payload = { _id: user._id.toString(), username: user.email, is_activated: user.is_activated };
     } else {
       // create google user into database
       const googleUser = await this.UsersModel.create({
         username: validateGoogleUserDto.email,
         email: validateGoogleUserDto.email,
-        password: '',
-        is_activated: true,
+        password: null,
         refresh_token: 'refresh_token_string',
       });
-      payload = {
-        _id: googleUser._id.toString(),
-        username: googleUser.username,
-      };
+      payload = { _id: googleUser._id.toString(), username: googleUser.username, is_activated: googleUser.is_activated };
     }
     return await this.generateToken(payload);
   }
 
   async refreshToken(refresh_token: string): Promise<any> {
     try {
-      const verify = this.jwtService.verify(refresh_token, {
+      const verify = await this.jwtService.verifyAsync(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       
@@ -126,16 +104,11 @@ export class AuthService {
         is_activated: checkExistToken.is_activated
       });
     } catch (error) {
-      Logger.error(error);
       throw new HttpException('Something error', HttpStatus.BAD_REQUEST);
     }
   }
 
-  private async generateToken(payload: {
-    _id: string;
-    username: string;
-    is_activated: boolean;
-  }) {
+  private async generateToken(payload: { _id: string; username: string; is_activated: boolean }) {
     const access_token = await this.jwtService.signAsync(payload);
     const refresh_token = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
@@ -144,6 +117,7 @@ export class AuthService {
     await this.UsersModel.findOneAndUpdate(
       { username: payload.username },
       { refresh_token: refresh_token },
+      { is_activated: payload.is_activated }
     );
     return { access_token, refresh_token };
   }
@@ -159,22 +133,20 @@ export class AuthService {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       return decodedToken;
     } catch (error) {
-      Logger.debug(error);
       throw new UnauthorizedException('Invalid token');
     }
   }
 
   async getProfileInfo(req: any): Promise<any> {
-    const user = await this.UsersModel.findOne({ username: req.username })
-      .select('username email is_activated password')
-      .exec();
-    return {
+    const user = await this.UsersModel.findOne({ username: req.username }).select('username email is_activated password').exec();
+    return ({
       username: user.username,
       email: user.email,
       is_activated: user.is_activated,
-      hasPassword: !!user.password, // True if password exists, false otherwise
-    };
+      hasPassword: user.password && user.password.length > 0,
+    });
   }
+
   async sendOTP(req: any): Promise<any> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const transporter = nodemailer.createTransport({
@@ -206,43 +178,54 @@ export class AuthService {
     try {
       await this.UsersModel.findOneAndUpdate(
         { email: req.email },
-        { is_activated: true },
+        { is_activated: true }
       );
     } catch (error) {
-      throw new HttpException(
-        'Failed to verify: ' + error,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException('Failed to verify: ' + error, HttpStatus.BAD_REQUEST);
     }
     return;
   }
+
   async changePassword(req: any): Promise<any> {
-    const user = await this.UsersModel.findOne({ email: req.email })
-      .select('password')
-      .exec();
+    const user = await this.UsersModel.findOne({ email: req.email }).select('password').exec();
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
     const isMatch = await bcrypt.compare(req.currentPassword, user.password);
-    if (user.password !== '' && !isMatch) {
-      throw new HttpException(
-        'Current password is incorrect',
-        HttpStatus.BAD_REQUEST,
-      );
+    if (user.password !== "" && !isMatch) {
+      throw new HttpException('Current password is incorrect', HttpStatus.BAD_REQUEST);
     }
 
     const hashedNewPassword = await this.hashPassword(req.newPassword);
     try {
       await this.UsersModel.findOneAndUpdate(
         { email: req.email },
-        { password: hashedNewPassword },
+        { password: hashedNewPassword }
       );
+
     } catch (error) {
-      throw new HttpException(
-        'Failed to update the password: ' + error,
-        HttpStatus.BAD_REQUEST,
+      throw new HttpException('Failed to update the password: ' + error, HttpStatus.BAD_REQUEST);
+
+    }
+    return;
+  }
+
+  async createPassword(req: any): Promise<any> {
+    const user = await this.UsersModel.findOne({ email: req.email }).select('password').exec();
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const hashedNewPassword = await this.hashPassword(req.newPassword);
+    try {
+      await this.UsersModel.findOneAndUpdate(
+        { email: req.email },
+        { password: hashedNewPassword }
       );
+
+    } catch (error) {
+      throw new HttpException('Failed to create the password: ' + error, HttpStatus.BAD_REQUEST);
     }
     return;
   }

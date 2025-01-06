@@ -1,52 +1,43 @@
-import { Controller, Post, Get, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query, Request, UseGuards } from '@nestjs/common';
 
 import { TasksService } from './tasks.service';
-import { AuthenticatedRequest, AuthGuard } from 'src/auth/auth.guard';
-import { Task } from './schema/task.schema';
+import { createTaskDTO } from './dto/create-tasks.dto';
+import { updateTaskDTO } from './dto/update-tasks.dto';
+import { deleteTaskDTO } from './dto/delete-tasks.dto';
+import { focusTimeDTO } from './dto/focus-time.dto';
+
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly taskService: TasksService) {};
 
+  @UseGuards(AuthGuard)
   @Get()
-  @UseGuards(AuthGuard)
-  async getAllTasks(@Request() request: AuthenticatedRequest): Promise<Task[]> {
-    return await this.taskService.getAll(request.user.username);
+  async getAllTasks(@Query('userName') userName: string) {
+    return await this.taskService.getAll(userName);
   }
 
+  @UseGuards(AuthGuard)
   @Post('create')
-  @UseGuards(AuthGuard)
-  async create(@Request() request: AuthenticatedRequest): Promise<Task> {
-    return await this.taskService.create({
-      ...request.body,
-      username: request.user.username,
-    });
+  async create(@Body() createTaskDto: createTaskDTO) {
+    return await this.taskService.create(createTaskDto);
   }
 
+  @UseGuards(AuthGuard)
   @Post('update')
-  @UseGuards(AuthGuard)
-  async update(@Request() request: AuthenticatedRequest) {
-    return await this.taskService.update({
-      ...request.body,
-      username: request.user.username,
-    });
+  async update(@Body() updateTaskDto: updateTaskDTO) {
+    return await this.taskService.update(updateTaskDto);
   }
 
-  @Post('delete')
   @UseGuards(AuthGuard)
-  async delete(@Request() request: AuthenticatedRequest) {
-    return await this.taskService.delete({
-      ...request.body,
-      username: request.user.username,
-    });
+  @Post('delete')
+  async delete(@Body() deleteTaskDto: deleteTaskDTO) {
+    return await this.taskService.delete(deleteTaskDto);
   }
 
   @Post('update-focus-time')
-  @UseGuards(AuthGuard)
-  async updateFocusTime(@Request() request: AuthenticatedRequest) {
-    return await this.taskService.updateFocusTime({
-      ...request.body,
-      username: request.user.username,
-    });
+  async updateFocusTime(@Body() focusTimeDto: focusTimeDTO) {
+    return await this.taskService.updateFocusTime(focusTimeDto);
   }
 }

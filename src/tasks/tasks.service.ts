@@ -1,10 +1,6 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 
 import { createTaskDTO } from './dto/create-tasks.dto';
 import { updateTaskDTO } from './dto/update-tasks.dto';
@@ -37,7 +33,7 @@ export class TasksService {
       taskName: createTask.taskName,
       description: createTask.description,
       priorityLevel: createTask.priorityLevel,
-      timeFocus: parseInt(createTask.timeFocus),
+      timeFocus: createTask.timeFocus,
       startDate: createTask.startDate,
       endDate: createTask.endDate,
       status: createTask.status,
@@ -51,9 +47,9 @@ export class TasksService {
     const { taskName, ...updateFields } = updateTask;
     const updatedTask = await this.TasksModel.findOneAndUpdate(
       {
-        username: updateTask.username,
-        taskName: taskName,
-      },
+          username: updateTask.username,
+          taskName: taskName,
+      }, 
       updateFields,
       {
         new: true,
@@ -108,15 +104,15 @@ export class TasksService {
       taskName: timer.taskName,
     }).exec();
 
-    if (timer.status == TaskStatus.TODO) {
+    if (timer.status == "Todo") {
       task.status = TaskStatus.IN_PROGRESS;
     }
 
-    const currentFocusTime = task.timeFocus || 0;
-    const additionalFocusTime = parseInt(timer.focusTime);
+    const currentFocusTime = parseInt(task.timeFocus || '0', 10);
+    const additionalFocusTime = parseInt(timer.focusTime, 10); 
     const updatedFocusTime = currentFocusTime + additionalFocusTime;
 
-    task.timeFocus = updatedFocusTime;
+    task.timeFocus = updatedFocusTime.toString();
     await task.save();
   }
 }
