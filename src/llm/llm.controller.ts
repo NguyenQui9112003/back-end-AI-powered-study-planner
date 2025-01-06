@@ -13,14 +13,14 @@ export class LlmController {
   async scheduleSuggestion(
     @Request() request: AuthenticatedRequest,
   ): Promise<string> {
-    return this.aiService.scheduleSuggestion(request);
+    return this.aiService.suggestSchedule(request);
   }
 
   @UseGuards(AuthGuard)
-  @Post('priority')
+  @Post('analyze')
   async prioritySuggestion(
     @Request() request: AuthenticatedRequest,
   ): Promise<string> {
-    return this.aiService.prioritySuggestion(request);
+    return this.aiService.provideInsight(request);
   }
 }

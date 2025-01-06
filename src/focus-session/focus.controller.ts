@@ -5,7 +5,7 @@ import { FocusSession } from './schema/focus-session.schema';
 import { DeleteResult } from 'mongoose';
 
 @Controller('focus-session')
-export class LlmController {
+export class FocusSessionController {
   constructor(private aiService: FocusSessionService) {}
 
   @UseGuards(AuthGuard)

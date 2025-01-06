@@ -2,20 +2,21 @@ import { Controller, Post, Get, Request, UseGuards } from '@nestjs/common';
 
 import { TasksService } from './tasks.service';
 import { AuthenticatedRequest, AuthGuard } from 'src/auth/auth.guard';
+import { Task } from './schema/task.schema';
 
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly taskService: TasksService) {}
+  constructor(private readonly taskService: TasksService) {};
 
   @Get()
   @UseGuards(AuthGuard)
-  async getAllTasks(@Request() request: AuthenticatedRequest) {
+  async getAllTasks(@Request() request: AuthenticatedRequest): Promise<Task[]> {
     return await this.taskService.getAll(request.user.username);
   }
 
   @Post('create')
   @UseGuards(AuthGuard)
-  async create(@Request() request: AuthenticatedRequest) {
+  async create(@Request() request: AuthenticatedRequest): Promise<Task> {
     return await this.taskService.create({
       ...request.body,
       username: request.user.username,

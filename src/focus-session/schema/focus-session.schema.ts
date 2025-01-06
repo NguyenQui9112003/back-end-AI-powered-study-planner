@@ -16,6 +16,9 @@ export class FocusSession {
 
   @Prop({ type: Number })
   breakTime: number; // calculate by seconds
+
+  @Prop({ type: Date })
+  startTime: Date; // calculate by seconds
 }
 
 export const FocusSessionSchema = SchemaFactory.createForClass(FocusSession);

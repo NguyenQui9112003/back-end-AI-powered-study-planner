@@ -7,6 +7,7 @@ import {
   FocusSession,
   FocusSessionSchema,
 } from './schema/focus-session.schema';
+import { FocusSessionController } from './focus.controller';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import {
     ]),
   ],
   providers: [FocusSessionService],
+  controllers: [FocusSessionController],
   exports: [MongooseModule, FocusSessionService],
 })
 export class FocusSessionModule {}

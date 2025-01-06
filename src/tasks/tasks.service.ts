@@ -19,7 +19,7 @@ export class TasksService {
     @InjectModel(Task.name) private TasksModel: Model<TaskDocument>,
   ) {}
 
-  async create(createTask: createTaskDTO): Promise<any> {
+  async create(createTask: createTaskDTO): Promise<TaskDocument> {
     const task = await this.TasksModel.findOne({
       username: createTask.username,
       taskName: createTask.taskName,
@@ -47,7 +47,7 @@ export class TasksService {
     return res;
   }
 
-  async update(updateTask: updateTaskDTO): Promise<Task> {
+  async update(updateTask: updateTaskDTO): Promise<TaskDocument> {
     const { taskName, ...updateFields } = updateTask;
     const updatedTask = await this.TasksModel.findOneAndUpdate(
       {
@@ -85,12 +85,16 @@ export class TasksService {
     return res;
   }
 
-  async getAll(user: string): Promise<Task[]> {
+  async getAll(user: string): Promise<TaskDocument[]> {
     const tasks = await this.TasksModel.find({ username: user }).exec();
     const currentDate = new Date();
     for (const task of tasks) {
       // check 'Expired'
-      if (task.endDate < currentDate && task.status !== TaskStatus.EXPIRED) {
+      if (
+        task.endDate < currentDate &&
+        task.status !== TaskStatus.EXPIRED &&
+        task.status !== TaskStatus.COMPLETED
+      ) {
         task.status = TaskStatus.EXPIRED;
         await task.save();
       }

@@ -110,6 +110,10 @@ export class AuthService {
       });
 
       if (!checkExistToken) {
+        Logger.error({
+          username: verify.username,
+          refresh_token,
+        });
         throw new HttpException(
           'Refresh token is not valid',
           HttpStatus.BAD_REQUEST,
