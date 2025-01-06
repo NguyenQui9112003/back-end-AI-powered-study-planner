@@ -27,7 +27,7 @@ export class AuthService {
 
   async register(registerUserDto: registerUserDTO): Promise<User> {
     const hashPassword = await this.hashPassword(registerUserDto.password);
-    
+
     const user = await this.UsersModel.findOne({ username: registerUserDto.username }).exec();
     if (user) {
       throw new UnauthorizedException('Error: Account exist');
@@ -38,7 +38,8 @@ export class AuthService {
       throw new UnauthorizedException('Error: Email exist');
     }
 
-    return await this.UsersModel.create({ username: registerUserDto.username, email: registerUserDto.email, password: hashPassword,
+    return await this.UsersModel.create({
+      username: registerUserDto.username, email: registerUserDto.email, password: hashPassword,
       refresh_token: 'refresh_token_string'
     });
   }
@@ -48,7 +49,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Error: Account no exist');
     }
-    const checkPass = await bcrypt.compare( loginUserDto.password, user.password );
+    const checkPass = await bcrypt.compare(loginUserDto.password, user.password);
     if (!checkPass) {
       throw new UnauthorizedException('Error: Password no correct');
     }
@@ -57,7 +58,7 @@ export class AuthService {
     return await this.generateToken(payload);
   }
 
-  async validateGoogleUser( validateGoogleUserDto: validateGoogleUserDTO ): Promise<any> {
+  async validateGoogleUser(validateGoogleUserDto: validateGoogleUserDTO): Promise<any> {
     var payload = null;
     const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
     if (user) {
@@ -80,7 +81,7 @@ export class AuthService {
       const verify = await this.jwtService.verifyAsync(refresh_token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-      const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token});
+      const checkExistToken = await this.UsersModel.findOne({ username: verify.username, refresh_token });
       if (checkExistToken) {
         return this.generateToken({ _id: verify._id.toString(), username: verify.username, is_activated: verify.is_activated });
       } else {
@@ -122,42 +123,43 @@ export class AuthService {
 
   async getProfileInfo(req: any): Promise<any> {
     const user = await this.UsersModel.findOne({ username: req.username }).select('username email is_activated password').exec();
-    return({
+    return ({
       username: user.username,
       email: user.email,
       is_activated: user.is_activated,
-      hasPassword: user.password && user.password.length > 0, 
+      hasPassword: user.password && user.password.length > 0,
     });
-    }
+  }
+
   async sendOTP(req: any): Promise<any> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const transporter = nodemailer.createTransport({
-      service: 'gmail', 
+      service: 'gmail',
       auth: {
-          user: 'aistudyplanner21ktpm2@gmail.com', 
-          pass: 'niwg yexn cjsx chof', 
+        user: 'aistudyplanner21ktpm2@gmail.com',
+        pass: 'niwg yexn cjsx chof',
       },
       from: 'aistudyplanner21ktpm2@gmail.com',
     });
     const mailOptions = {
-      from: 'aistudyplanner21ktpm2@gmail.com', 
+      from: 'aistudyplanner21ktpm2@gmail.com',
       to: req.email,
-      subject: 'AI Study Planner Verification code', 
-      text: `Your OTP code is: ${otp}`, 
+      subject: 'AI Study Planner Verification code',
+      text: `Your OTP code is: ${otp}`,
     };
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-          console.error('Error sending email:', error);
+        console.error('Error sending email:', error);
       } else {
-          console.log('Email sent:', info.response);
+        console.log('Email sent:', info.response);
       }
     });
-    return {otp: await this.hashPassword(otp)};
+    return { otp: await this.hashPassword(otp) };
   }
-    
+
   async verifyWithEmail(req: any): Promise<any> {
     console.log(req);
-    try{
+    try {
       await this.UsersModel.findOneAndUpdate(
         { email: req.email },
         { is_activated: true }
@@ -167,6 +169,7 @@ export class AuthService {
     }
     return;
   }
+
   async changePassword(req: any): Promise<any> {
     const user = await this.UsersModel.findOne({ email: req.email }).select('password').exec();
     if (!user) {
@@ -179,7 +182,7 @@ export class AuthService {
     }
 
     const hashedNewPassword = await this.hashPassword(req.newPassword);
-    try{
+    try {
       await this.UsersModel.findOneAndUpdate(
         { email: req.email },
         { password: hashedNewPassword }
@@ -191,6 +194,7 @@ export class AuthService {
     }
     return;
   }
+
   async createPassword(req: any): Promise<any> {
     const user = await this.UsersModel.findOne({ email: req.email }).select('password').exec();
     if (!user) {
@@ -198,7 +202,7 @@ export class AuthService {
     }
 
     const hashedNewPassword = await this.hashPassword(req.newPassword);
-    try{
+    try {
       await this.UsersModel.findOneAndUpdate(
         { email: req.email },
         { password: hashedNewPassword }
@@ -206,7 +210,6 @@ export class AuthService {
 
     } catch (error) {
       throw new HttpException('Failed to create the password: ' + error, HttpStatus.BAD_REQUEST);
-
     }
     return;
   }
