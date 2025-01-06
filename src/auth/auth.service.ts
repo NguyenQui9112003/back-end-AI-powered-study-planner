@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   async validateGoogleUser(validateGoogleUserDto: validateGoogleUserDTO): Promise<any> {
-    var payload = null;
+    let payload = null;
     const user = await this.UsersModel.findOne({ email: validateGoogleUserDto.email }).exec();
     if (user) {
       payload = { _id: user._id.toString(), username: user.email, is_activated: user.is_activated };
@@ -88,10 +88,6 @@ export class AuthService {
       });
 
       if (!checkExistToken) {
-        Logger.error({
-          username: verify.username,
-          refresh_token,
-        });
         throw new HttpException(
           'Refresh token is not valid',
           HttpStatus.BAD_REQUEST,

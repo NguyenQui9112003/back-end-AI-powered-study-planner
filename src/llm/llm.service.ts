@@ -122,8 +122,7 @@ export class LLMService {
           if (task.status === 'Expired') {
             stats.overdueTasks += 1;
           }
-          stats.avgSessionDuration += task.timeFocus;
-          stats.totalEstimatedTime += task.expectedTime;
+          stats.avgSessionDuration += parseFloat(task.timeFocus);
         }
 
         if (stats.totalTasks !== 0) {
@@ -239,13 +238,10 @@ improvements for optimization.
   }
 }
 `;
-    Logger.debug('Schedule feedback request: ' + JSON.stringify(request.body));
 
     prompt += '\n** User Input **\n' + JSON.stringify(request.body);
 
     const result = await model.generateContent(prompt);
-
-    Logger.debug('Schedule feedback response: ' + result.response.text());
 
     return result.response.text();
   }
